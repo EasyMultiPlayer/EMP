@@ -1,6 +1,8 @@
 #!/bin/env python
 # ENV VARS
-PORT=6000
+HOST="tcp://127.0.0.1"
+PORT_REP="6000"
+PORT_PUB="6001"
 RES="res"
 DB=RES+"/data.db"
 
