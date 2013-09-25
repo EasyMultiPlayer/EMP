@@ -2,22 +2,32 @@ import time
 import threading
 import zmq
 import config
-from lib import logging
+from lib import transport, logging, status
 
+# request response server
 def startREP():
     context = zmq.Context()
     socket = context.socket(zmq.REP)
 
-    socket.connect(config.HOST+":"+config.PORT_REP)
+    # listening to client
+    socket.bind("tcp://*:"+config.PORT_REPC)
 
     while True:
-        string  = socket.recv()
+        try:
+            string  = socket.recv()
 
-        # TODO create a thread and send it to the game server
-        print("Received request: [%s]\n" % (string))
+            print logging.debug(string)
+            # TODO create a thread and send it to the game server
+            thread=threading.Thread(target=transport.sendToGameServer,args=(string,))
+            thread.start()
 
-        time.sleep(1)
+            socket.send(status.SUCCESS)
+        except KeyboardInterrupt:
+            socket.close()
+        except:
+            socket.send(status.ERROR)
 
-        socket.send("World")
+if __name__=="__main__":
+    startREP()
 
 
