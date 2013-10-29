@@ -1,26 +1,31 @@
 import config
 import time
 
-def getCurrentTime():
-	return time.strftime("%d-%m-%Y %H:%M:%S")
 
-def debug(message,key="[DEBUG]"):
-	return getCurrentTime()+":"+key+":"+message
+def getCurrentTime():
+    return time.strftime("%d-%m-%Y %H:%M:%S")
+
+
+def debug(message, key="[DEBUG]"):
+    return getCurrentTime() + ":" + key + ":" + message
+
 
 def error(message):
-    errorLog=open(config.ERROR_LOG,"a")
-    errorLog.write("\n"+debug(message,"[ERROR]"))
+    errorLog = open(config.ERROR_LOG, "a")
+    errorLog.write("\n" + debug(message, "[ERROR]"))
     errorLog.close()
-    return debug(message,"[ERROR]")
+    return debug(message, "[ERROR]")
 
-def access(ip,type=""):
-    accessLog=open(config.ACCESS_LOG,"a")
-    accessLog.write("\n"+getCurrentTime()+":"+ip+":"+type)
+
+def access(ip, type=""):
+    accessLog = open(config.ACCESS_LOG, "a")
+    accessLog.write("\n" + getCurrentTime() + ":" + ip + ":" + type)
     accessLog.close()
 
+
 def log(args):
-    logFile=open(config.LOG,"a")
-    logFile.write("\n"+getCurrentTime())
+    logFile = open(config.LOG, "a")
+    logFile.write("\n" + getCurrentTime())
     for arg in args:
-        logFile.write(arg+" ")
+        logFile.write(arg + " ")
     logFile.close()
