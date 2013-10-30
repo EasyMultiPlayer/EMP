@@ -67,12 +67,11 @@ class SessionKeys(Base):
     __tablename__ = "session_keys"
     id = Column(Integer, primary_key=True)
     key = Column(String)
-    user_id=Column(Integer,ForeignKey(User.id))
+    user_id = Column(Integer,ForeignKey(User.id))
     user = relationship(User,uselist=False)
 
-    def __init__(self, key, user, ip):
+    def __init__(self, key):
         self.key = key
-        self.user = user
 
 
 class Log(Base):
