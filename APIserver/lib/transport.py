@@ -4,8 +4,10 @@ import json
 import config
 import traceback
 import logging, status
+import copy
 
 data_push = []
+data_pub = {} # this should have 'session_key':'<data_to_be_pushed>' dictionary
 
 # request response server
 def server_request_response():
@@ -52,8 +54,7 @@ def server_push():
     context = zmq.Context()
     socket = context.socket(zmq.PUSH)
 
-    socket.connect("tcp://"+config.HOST+":"+config.PORT_PUSH)
-    print "tcp://"+config.HOST+":"+config.PORT_PUSH
+    socket.bind("tcp://*:" + config.PORT_PUSH)
 
     while True:
         try:
@@ -65,7 +66,15 @@ def server_push():
             traceback.print_exc()
 
 def server_publish():
-    pass
+    context = zmq.Context()
+    socket = context.socket(zmq.PUB)
+
+    socket.bind("tcp://*:" + config.PORT_PUB)
+    while True:
+        data_queue=copy.deepcopy(data_pub)
+        for session_key in data_queue:
+            socket.send(session_key + " " + data_queue[session_key])
+            del(data_pub[session_key])
 
 def sendToGameServer(args):
     # TODO
