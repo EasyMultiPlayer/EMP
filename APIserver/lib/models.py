@@ -34,8 +34,6 @@ class GameServer(Base):
     id = Column(Integer, primary_key=True)
     user_id=Column(Integer,ForeignKey(User.id))
     user = relationship(User,uselist=False)
-    #user = relationship("User", order_by="users.id", backref="game_server")
-    # this will have csv of game state parameters
     game_state_params = Column(String)
 
     def __init__(self, game_state_params="[]"):
@@ -51,7 +49,6 @@ class GameClient(Base):
     user = relationship(User,uselist=False)
 
     def __init__(self, server_shared_key):
-        #super(GameClient, self).__init__(user_json, apiKey)
         self.server_shared_key = server_shared_key
 
 

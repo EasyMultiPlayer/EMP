@@ -1,40 +1,64 @@
 import zmq
-import threading
+import json
+import traceback
 import config
 
 data_request_with_response = []
-data_request_without_response = []
+data_push = []
+data_pull = [] # this is populated by the server
 reply = None
-response = []
+response = {}
 
-
-def send_request_with_response():
+# this is used only in the initial stages
+def server_request_response():
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     #socket.connect("tcp://127.0.0.1:6001")
-    socket.bind("tcp://*:" + config.PORT_REPC)
-    #socket.connect("tcp://127.0.0.1:5600")
-
-    #for i in range(10):
-    #    msg = "msg %s" % i
-    #    socket.send(msg)
-    #    print "Sending", msg
-    #    msg_in = socket.recv()
-    #    print msg_in
+    #socket.bind("tcp://*:" + config.PORT_REPC)
+    socket.connect("tcp://"+config.HOST+":"+config.PORT_REPC)
+    print "tcp://"+config.HOST+":"+config.PORT_REPC
 
     while True:
-        for part in data_request_with_response:
-            # TODO make sure that it sends proper data
-            thread_send_and_get = threading.Thread(target=send_and_get, args=(socket, part,))
-            thread_send_and_get.start()
-            #socket.send(part)
+        try:
+            # TODO send everything in a batch
+            for index in range(0,len(data_request_with_response)):
+                data=data_request_with_response.pop(index)
+                socket.send(json.dumps(data))
+                # now response[key] will have the required data
+                key,val=data
+                response[key]=socket.recv()
+        except:
+            traceback.print_exc()
 
 
-def send_and_get(socket, part):
-    socket.send(part)
-    response.append(socket.recv())
+# this is used later on
+def server_push():
+    context = zmq.Context()
+    socket = context.socket(zmq.PUSH)
 
+    socket.connect("tcp://"+config.HOST+":"+config.PORT_PUSH)
+    print "tcp://"+config.HOST+":"+config.PORT_PUSH
 
-def send_request_without_response():
-    #TODO here waiting for response must happen in a thread
-    pass
+    while True:
+        try:
+            for data in data_push:
+                socket.send(json.dumps(data))
+                data_push.remove(data)
+
+        except:
+            traceback.print_exc()
+
+def server_pull():
+    context = zmq.Context()
+    socket = context.socket(zmq.PULL)
+
+    socket.connect("tcp://"+config.HOST+":"+config.PORT_PULL)
+    print "tcp://"+config.HOST+":"+config.PORT_PULL
+
+    while True:
+        try:
+            # TODO do we need to convert it to json from string ?? O.o
+            data_pull.append(socket.recv())
+
+        except:
+            traceback.print_exc()
