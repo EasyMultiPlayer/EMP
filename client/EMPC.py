@@ -11,6 +11,7 @@ for thread in threads:
     thread.start()
 
 for i in range(0, 10000):
+    print i
     transport.data_push.append({str(i) + 'alse': str(i)})
 
 
