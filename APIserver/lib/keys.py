@@ -1,6 +1,6 @@
 import os
 from hashlib import md5, sha1
-import db
+
 
 # returns two keys private_key, public key
 def api_key_gen():

@@ -30,7 +30,7 @@ def save_session(private_key=None, shared_key=None, key=None):
 def create_new_user(user_json, address):
     user=User(json.dumps(user_json),address)
     session.add(user)
-    #session.commit()
+    # session.commit()
     return user
 
 def create_new_game_server(user_json,address,game_state_params):
@@ -38,4 +38,4 @@ def create_new_game_server(user_json,address,game_state_params):
     server=GameServer(game_state_params)
     server.user=user
     session.add(server)
-    #session.commit()
+    # session.commit()
