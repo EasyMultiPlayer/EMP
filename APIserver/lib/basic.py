@@ -1,7 +1,5 @@
 import os
 import subprocess
-import sqlite3
-from config import DB
 
 
 def _exe(command):
@@ -15,7 +13,4 @@ def pipe(command, kind='str'):
     else:
         return subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.readlines()
 
-
-def db_connect():
-    return sqlite3.connect(DB)
 

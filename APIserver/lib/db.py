@@ -39,3 +39,13 @@ def create_new_game_server(user_json,address,game_state_params):
     server.user=user
     session.add(server)
     # session.commit()
+
+def get_user_from_api_key(api_key):
+    user=session.query(User).filter(User.private_key==api_key)
+    game_client=session.query(GameClient).filter(GameClient.user==user)
+    if game_client:
+        return game_client
+    game_server=session.query(GameServer.filter(GameServer.user==user))
+    if game_server:
+        return game_server
+    return None
