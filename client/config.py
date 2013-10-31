@@ -5,5 +5,8 @@ PORT_SUB = "6002"
 PORT_PUSH = "6003"
 PORT_PULL = "6004"
 
-API_KEY=""
-SERVER_SHARED_KEY=""
+API_KEY = ""
+SERVER_SHARED_KEY = ""
+
+# this is set later in the game
+SESSION_KEY = ""

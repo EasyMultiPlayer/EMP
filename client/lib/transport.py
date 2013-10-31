@@ -2,6 +2,7 @@ import zmq
 import json
 import traceback
 import config
+import time
 
 data_request_with_response = []
 data_push = []
@@ -24,10 +25,10 @@ def server_request_response():
             # TODO send everything in a batch
             for index in range(0,len(data_request_with_response)):
                 data=data_request_with_response.pop(index)
+                data['time']=time.time()
                 socket.send(json.dumps(data))
-                # now response[key] will have the required data
-                key,val=data
-                response[key]=socket.recv()
+
+                response.append(json.loads(socket.recv()))
         except:
             traceback.print_exc()
 
@@ -43,6 +44,7 @@ def server_push():
     while True:
         try:
             for data in data_push:
+                data['time']=time.time()
                 socket.send(json.dumps(data))
                 data_push.remove(data)
 
