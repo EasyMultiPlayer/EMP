@@ -1,10 +1,13 @@
 import threading
 import zmq
 import json
-import config
 import traceback
-import logging, status
 import copy
+
+import config
+import logging
+from res import status
+
 
 data_push = []
 data_pub = {} # this should have 'session_key':'<data_to_be_pushed>' dictionary
