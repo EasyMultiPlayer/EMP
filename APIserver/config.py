@@ -1,11 +1,8 @@
 #!/bin/env python
 # ENV VARS
 HOST = "127.0.0.1"
-PORT_REPS = "6000"
-PORT_REPC = "6001"
-PORT_PUB = "6002"
-PORT_PULL = "6003"
-PORT_PUSH = "6004"
+PORT_PUB = "6001"
+PORT_PULL = ["6002", "6003", "6004", "6005", "6006"]
 RES = "res"
 DB = RES + "/data.db"
 
