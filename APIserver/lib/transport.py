@@ -1,12 +1,8 @@
 import threading
 import zmq
-import json
-import traceback
 import copy
-
 import config
 import logging
-from res import status
 
 class Transport():
     data_push = []
