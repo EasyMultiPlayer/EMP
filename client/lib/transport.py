@@ -3,6 +3,7 @@ import json
 import traceback
 import config
 import time
+from lib import logging
 
 data_request_with_response = []
 data_push = []
@@ -27,8 +28,8 @@ def server_request_response():
                 data=data_request_with_response.pop(index)
                 data['time']=time.time()
                 socket.send(json.dumps(data))
-
-                response.append(json.loads(socket.recv()))
+                response_data=socket.recv()
+                response.append(json.loads(response_data),"[REQ]")
         except:
             traceback.print_exc()
 
@@ -46,6 +47,7 @@ def server_push():
             for data in data_push:
                 data['time']=time.time()
                 socket.send(json.dumps(data))
+                logging.debug(json.dumps(data),"[PUSH]")
                 data_push.remove(data)
 
         except:
@@ -61,7 +63,9 @@ def server_pull():
     while True:
         try:
             # TODO do we need to convert it to json from string ?? O.o
-            data_pull.append(json.loads(socket.recv()))
+            data=socket.recv()
+            logging.debug(json.loads(data),"[PULL]")
+            data_pull.append(json.loads(data))
 
         except:
             traceback.print_exc()
@@ -77,7 +81,9 @@ def server_subscribe(session_key):
     socket.setsockopt(zmq.SUBSCRIBE,session_key)
     while True:
         try:
-            data_sub.append(json.loads(socket.recv()))
+            data=socket.recv()
+            logging.debug(json.loads(data),"[SUBSCRIBE]")
+            data_sub.append(json.loads(data))
         except:
             traceback.print_exc()
 
