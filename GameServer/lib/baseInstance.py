@@ -1,6 +1,6 @@
 import random
 
-class Instance():
+class BaseInstance():
     # array of user shared keys
     users=[]
     status=''
@@ -12,3 +12,9 @@ class Instance():
     # add user to instance
     def join_instance(self,client_shared_key):
         self.users.append(client_shared_key)
+
+    def leave_instance(self,client_shared_key):
+        self.users.remove(client_shared_key)
+        # todo test this
+        if len(self.users) == 0:
+            self.status='removed'

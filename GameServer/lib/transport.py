@@ -4,9 +4,8 @@ import traceback
 import config
 import time
 import threading
-import user_layer
-from instance import Instance
-from lib import logging
+import logging
+from userOverrides import Instance,Protocol
 from res import actions
 
 
@@ -27,7 +26,7 @@ class Transport():
             thread.start()
 
         # step 2 connect to api server
-        self.send(action=actions.connect,api=True)
+        self.send(action=actions.connect, api=True)
 
         # step 3 subscribe to client shared key
         self.subscribe(config.SHARED_KEY)
@@ -51,26 +50,32 @@ class Transport():
         self.data_push.append(json.dumps(query))
 
 
-    def parse_response(self,data):
+    def parse_response(self, data):
         _action = data['action']
         if _action == actions.get_games:
-            data['client_shared_key']=data['shared_key']
-            data['games'] = user_layer.get_games(self,data['client_shared_key'])
-            self.send(data,action=actions.game_list,shared=True)
+            data['client_shared_key'] = data['shared_key']
+            data['games'] = Protocol.get_games(self, data['client_shared_key'])
+            self.send(data, action=actions.game_list, shared=True)
 
         if _action == actions.new_game:
-            #todo
-            new_instance=Instance()
-            pass
-        if _action == actions.select_game:
-            # todo
-            pass
+            new_instance=Instance(data['session_key'])
+            new_instance = Protocol.new_game(new_instance,data['shared_key'])
+            self.instances.append(new_instance)
 
+        if _action == actions.select_game:
+            for instance in self.instances:
+                if instance.session_key == data['session_key']:
+                    instance.join_instance(data['shared_key'])
+
+        if _action == actions.event:
+            #todo
+            pass
+        
 
     # this keeps sending packet to server to tell that it is alive
     def alive(self):
         while True:
-            self.send(action=actions.alive,shared=True)
+            self.send(action=actions.alive, shared=True)
             time.sleep(config.ALIVE_PULSE)
 
     def push_server(self):
@@ -103,7 +108,7 @@ class Transport():
                 data = socket.recv()
                 logging.debug(json.loads(data), "[SUBSCRIBE]")
                 #self.data_sub.append(json.loads(data))
-                thread = threading.Thread(target=self.parse_response,args=(json.loads(data),))
+                thread = threading.Thread(target=self.parse_response, args=(json.loads(data),))
                 thread.start()
             except:
                 traceback.print_exc()
