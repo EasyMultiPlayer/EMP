@@ -1,12 +1,15 @@
 HOST = "127.0.0.1"
-PORT_REPS = "6000"
-PORT_REPC = "6001"
-PORT_SUB = "6002"
-PORT_PUSH = "6003"
-PORT_PULL = "6004"
+PORT_SUB = "6001"
+PORT_PUSH = ["6002", "6003", "6004", "6005", "6006"]
 
-API_KEY = ""
-SERVER_SHARED_KEY = ""
+# To be set TBS
+API_KEY = "TBS"
+SHARED_KEY="TBS"
+SERVER_SHARED_KEY = "TBS"
 
 # this is set later in the game
-SESSION_KEY = ""
+SESSION_KEY = "TBS"
+
+
+# Users shouldnt change these
+ALIVE_PULSE=60

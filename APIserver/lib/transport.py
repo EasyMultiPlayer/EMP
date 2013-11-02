@@ -1,84 +1,102 @@
 import threading
 import zmq
-import json
-import traceback
 import copy
-
 import config
 import logging
-from res import status
+import time
+import json
+from res import actions
+import db
+from basic import data_filter
 
 
-data_push = []
-data_pub = {} # this should have 'session_key':'<data_to_be_pushed>' dictionary
+class Transport():
+    logs = []
+    data_pub = {} # this should have 'session_key':'<data_to_be_pushed>' dictionary
 
-# request response server
-def server_request_response():
-    context = zmq.Context()
-    socket = context.socket(zmq.REP)
+    def __init__(self):
+        self.threads = [
+            threading.Thread(target=self.publish),
+            threading.Thread(target=self.batch_logger)
+        ]
 
-    # listening to client
-    socket.bind("tcp://*:" + config.PORT_REPC)
+        for port in config.PORT_PULL:
+            self.threads.append(threading.Thread(target=self.pull, args=(port,)))
 
-    while True:
-        try:
-            string = socket.recv()
-
-            print logging.debug(string)
-            # TODO do something with data here
-            # TODO create a thread and send it to the game server
-            thread = threading.Thread(target=sendToGameServer, args=(string,))
+    def start(self):
+        for thread in self.threads:
             thread.start()
 
-            socket.send(status.SUCCESS)
-        except:
-            socket.close()
+    def send(self, query, action, key):
+        query['time'] = time.time()
+        if action:
+            query['action'] = action
 
-def server_pull():
-    context = zmq.Context()
-    socket = context.socket(zmq.PULL)
+        self.data_pub[key] = json.dumps(query)
 
-    # listening to client
-    socket.bind("tcp://*:" + config.PORT_PULL)
+    # keeps logging in a batch
+    def batch_logger(self):
+        while True:
+            for log in self.logs:
+                # TODO
+                self.logs.remove(log)
+            time.sleep(5)
 
-    while True:
-        try:
+    def pull_processor(self, data):
+        _action = data['actions']
+
+        # from game_server or client
+        if _action == actions.connect:
+            print logging.debug("Connect " + data['api_key'], "[Info]")
+
+        # from client
+        elif _action == actions.get_games:
+            # TODO if client doesnt exist then raise error
+            client = db.get_user_from_api_key(data['api_key'])
+            print logging.debug(actions.get_games, '[Info]')
+            self.send({'shared_key': client.user.shared_key}, action=actions.get_games, key=client.server_shared_key)
+
+        # from game server
+        elif _action == actions.game_list:
+            # replace server shared key with client shared key
+            data['shared_key'] = data['client_shared_key']
+            key = data['client_shared_key']
+            # remove that field
+            data = data_filter(data, ['client_shared_key', ])
+            # publish to that key
+            self.send(data, action=actions.game_list, key=key)
+
+        # from client select game
+        elif _action == actions.select_game:
+            # TODO
+            pass
+
+        # from client new game
+        elif _action == actions.new_game:
+            #TODO
+            pass
+
+    def pull(self, port):
+        context = zmq.Context()
+        socket = context.socket(zmq.PULL)
+
+        # listening to client
+        socket.bind("tcp://*:" + port)
+
+        while True:
             string = socket.recv()
-
-            print logging.debug(string)
-            thread = threading.Thread(target=sendToGameServer, args=(string,))
+            #print logging.debug(string, '[PULL:' + port + ']')
+            thread = threading.Thread(target=self.pull_processor, args=(json.loads(string),))
             thread.start()
 
-        except:
-            socket.close()
+    # TODO make this multi threaded
+    def publish(self):
+        context = zmq.Context()
+        socket = context.socket(zmq.PUB)
 
-# this is used later on
-def server_push():
-    context = zmq.Context()
-    socket = context.socket(zmq.PUSH)
-
-    socket.bind("tcp://*:" + config.PORT_PUSH)
-
-    while True:
-        try:
-            for data in data_push:
-                socket.send(json.dumps(data))
-                data_push.remove(data)
-
-        except:
-            traceback.print_exc()
-
-def server_publish():
-    context = zmq.Context()
-    socket = context.socket(zmq.PUB)
-
-    socket.bind("tcp://*:" + config.PORT_PUB)
-    while True:
-        data_queue=copy.deepcopy(data_pub)
-        for session_key in data_queue:
-            socket.send(session_key + " " + data_queue[session_key])
-            del(data_pub[session_key])
-
-def sendToGameServer(args):
-    # TODO
-    pass
+        socket.bind("tcp://*:" + config.PORT_PUB)
+        while True:
+            data_queue = copy.deepcopy(self.data_pub)
+            for session_key in data_queue:
+                socket.send(session_key + " " + data_queue[session_key])
+                del (self.data_pub[session_key])
