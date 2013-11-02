@@ -60,7 +60,7 @@ class Transport():
     # this keeps sending packet to server to tell that it is alive
     def alive(self):
         while True:
-            self.send(action=actions.alive, server_shared=True)
+            self.send(action=actions.alive, shared=True)
             time.sleep(config.ALIVE_PULSE)
 
     def push_server(self):

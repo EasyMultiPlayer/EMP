@@ -2,81 +2,108 @@ import zmq
 import json
 import traceback
 import config
-
-data_request_with_response = []
-data_push = []
-data_pull = [] # this is populated by the server
-data_sub = []
-reply = None
-response = {}
-
-# this is used only in the initial stages
-def server_request_response():
-    context = zmq.Context()
-    socket = context.socket(zmq.REQ)
-    #socket.connect("tcp://127.0.0.1:6001")
-    #socket.bind("tcp://*:" + config.PORT_REPC)
-    socket.connect("tcp://"+config.HOST+":"+config.PORT_REPC)
-    print "tcp://"+config.HOST+":"+config.PORT_REPC
-
-    while True:
-        try:
-            # TODO send everything in a batch
-            for index in range(0,len(data_request_with_response)):
-                data=data_request_with_response.pop(index)
-                socket.send(json.dumps(data))
-                # now response[key] will have the required data
-                key,val=data
-                response[key]=socket.recv()
-        except:
-            traceback.print_exc()
+import time
+import threading
+import user_layer
+from instance import Instance
+from lib import logging
+from res import actions
 
 
-# this is used later on
-def server_push():
-    context = zmq.Context()
-    socket = context.socket(zmq.PUSH)
+class Transport():
+    data_push = []
+    data_sub = []
+    response = {}
+    # this will have all the game instances
+    instances = []
 
-    socket.connect("tcp://"+config.HOST+":"+config.PORT_PUSH)
-    print "tcp://"+config.HOST+":"+config.PORT_PUSH
+    def __init__(self):
+        self.threads = [
+            threading.Thread(target=self.push_server),
+            threading.Thread(target=self.alive)
+        ]
+        # step 1 start all servers
+        for thread in self.threads:
+            thread.start()
 
-    while True:
-        try:
-            for data in data_push:
-                socket.send(json.dumps(data))
-                data_push.remove(data)
+        # step 2 connect to api server
+        self.send(action=actions.connect,api=True)
 
-        except:
-            traceback.print_exc()
+        # step 3 subscribe to client shared key
+        self.subscribe(config.SHARED_KEY)
 
-def server_pull():
-    context = zmq.Context()
-    socket = context.socket(zmq.PULL)
+    # call this method to subscribe to a new key
+    def subscribe(self, key):
+        thread = threading.Thread(target=self.subscribe_server, args=(key,))
+        thread.start()
+        self.threads.append(thread)
 
-    socket.connect("tcp://"+config.HOST+":"+config.PORT_PULL)
-    print "tcp://"+config.HOST+":"+config.PORT_PULL
+    # call this to push to the api server
+    def send(self, query={}, action=None, api=False, shared=False):
+        query['time'] = time.time()
+        if action:
+            query['action'] = action
+        if api:
+            query['api_key'] = config.API_KEY
+        if shared:
+            query['shared_key'] = config.SHARED_KEY
 
-    while True:
-        try:
-            # TODO do we need to convert it to json from string ?? O.o
-            data_pull.append(json.loads(socket.recv()))
-
-        except:
-            traceback.print_exc()
-
-# DONT start this right in the beginning coz u dont know what is the session key of the game instance
-# todo see whether client has to subscribe to many session keys
-def server_subscribe(session_key):
-    context = zmq.Context()
-    socket = context.socket(zmq.SUB)
-    socket.connect("tcp://"+config.HOST+":"+config.PORT_SUB)
-    print "tcp://"+config.HOST+":"+config.PORT_SUB
-
-    socket.setsockopt(zmq.SUBSCRIBE,session_key)
-    while True:
-        try:
-            data_sub.append(json.loads(socket.recv()))
-        except:
-            traceback.print_exc()
+        self.data_push.append(json.dumps(query))
 
 
+    def parse_response(self,data):
+        _action = data['action']
+        if _action == actions.get_games:
+            data['client_shared_key']=data['shared_key']
+            data['games'] = user_layer.get_games(self,data['client_shared_key'])
+            self.send(data,action=actions.game_list,shared=True)
+
+        if _action == actions.new_game:
+            #todo
+            new_instance=Instance()
+            pass
+        if _action == actions.select_game:
+            # todo
+            pass
+
+
+    # this keeps sending packet to server to tell that it is alive
+    def alive(self):
+        while True:
+            self.send(action=actions.alive,shared=True)
+            time.sleep(config.ALIVE_PULSE)
+
+    def push_server(self):
+        context = zmq.Context()
+        socket = context.socket(zmq.PUSH)
+
+        for port in config.PORT_PUSH:
+            socket.connect("tcp://" + config.HOST + ":" + port)
+
+        while True:
+            try:
+                for data in self.data_push:
+                    print logging.debug(data, "[PUSH]")
+                    socket.send(data)
+                    self.data_push.remove(data)
+
+            except:
+                traceback.print_exc()
+
+    # DONT start this right in the beginning coz u dont know what is the session key of the game instance
+    # todo see whether client has to subscribe to many session keys
+    def subscribe_server(self, key):
+        context = zmq.Context()
+        socket = context.socket(zmq.SUB)
+        socket.connect("tcp://" + config.HOST + ":" + config.PORT_SUB)
+
+        socket.setsockopt(zmq.SUBSCRIBE, key)
+        while True:
+            try:
+                data = socket.recv()
+                logging.debug(json.loads(data), "[SUBSCRIBE]")
+                #self.data_sub.append(json.loads(data))
+                thread = threading.Thread(target=self.parse_response,args=(json.loads(data),))
+                thread.start()
+            except:
+                traceback.print_exc()
