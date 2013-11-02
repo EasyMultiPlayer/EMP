@@ -3,9 +3,11 @@ import zmq
 import copy
 import config
 import logging
+import time
+import json
+from res import actions
 
 class Transport():
-    data_push = []
     data_pub = {} # this should have 'session_key':'<data_to_be_pushed>' dictionary
 
     def __init__(self):
@@ -17,6 +19,17 @@ class Transport():
     def start(self):
         for thread in self.threads:
             thread.start()
+
+    def send(self,query,action,key):
+        query['time']=time.time()
+        if action:
+            query['action']=action
+
+        self.data_pub[key]=json.dumps(query)
+
+    def pull_processor(self,data):
+        # TODO
+        pass
 
     def server_pull(self,port):
         context = zmq.Context()
@@ -30,7 +43,7 @@ class Transport():
                 string = socket.recv()
 
                 print logging.debug(string,'[PULL:'+port+']')
-                thread = threading.Thread(target=sendToGameServer, args=(string,))
+                thread = threading.Thread(target=self.pull_processor, args=(json.loads(string),))
                 thread.start()
 
             except:
@@ -46,7 +59,3 @@ class Transport():
             for session_key in data_queue:
                 socket.send(session_key + " " + data_queue[session_key])
                 del(self.data_pub[session_key])
-
-def sendToGameServer(args):
-    # TODO
-    pass

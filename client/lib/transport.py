@@ -18,11 +18,15 @@ class Transport():
             threading.Thread(target=self.push_server),
             threading.Thread(target=self.alive)
         ]
-
-    # this starts all the servers
-    def start(self):
+        # step 1 start all servers
         for thread in self.threads:
             thread.start()
+
+        # step 2 connect to api server
+        self.send(action=actions.connect,api=True,server_shared=True)
+
+        # step 3 subscribe to client shared key
+        self.subscribe(config.SHARED_KEY)
 
     # call this method to subscribe to a new key
     def subscribe(self, key):
@@ -45,6 +49,13 @@ class Transport():
             query['server_shared_key'] = config.SERVER_SHARED_KEY
 
         self.data_push.append(json.dumps(query))
+
+    # get response
+    def get_response(self,action):
+        while True:
+            for response in self.data_sub:
+                if response.has_key('action') and response['action']==action:
+                    return json.loads(self.data_sub.pop(response))
 
     # this keeps sending packet to server to tell that it is alive
     def alive(self):

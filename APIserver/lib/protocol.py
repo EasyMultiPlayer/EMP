@@ -1,4 +1,4 @@
-from res import constants, status
+from res import actions, status
 import db
 # when client queries for available games
 # TODO attach this to transport

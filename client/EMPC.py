@@ -1,10 +1,10 @@
 from lib.transport import Transport
+from lib import protocol
 
 client = Transport()
-client.start()
+protocol.init(client)
 
-i={"1":"a","2":"b"}
 import time
 while True:
-    client.send(query=i)
+    client.send(query={"1":"a","2":"b"})
     time.sleep(1)
