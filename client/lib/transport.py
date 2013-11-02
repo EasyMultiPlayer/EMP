@@ -23,7 +23,7 @@ class Transport():
             thread.start()
 
         # step 2 connect to api server
-        self.send(action=actions.connect,api=True,server_shared=True)
+        self.send(action=actions.connect,api=True)
 
         # step 3 subscribe to client shared key
         self.subscribe(config.SHARED_KEY)
