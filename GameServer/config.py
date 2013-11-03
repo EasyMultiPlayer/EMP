@@ -11,7 +11,7 @@ SESSION_KEY = "TBS"
 
 
 # Users shouldnt change these
-ALIVE_PULSE=5
+ALIVE_PULSE=10
 
 #TODO
 GAME_STATE_PARAMS={}

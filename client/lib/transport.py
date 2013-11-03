@@ -54,8 +54,9 @@ class Transport():
     def get_response(self,action):
         while True:
             for response in self.data_sub:
-                if response.has_key('action') and response['action']==action:
-                    return json.loads(self.data_sub.pop(response))
+                if response.has_key('action') and response['action'] == action:
+                    self.data_sub.remove(response)
+                    return response
 
     # this keeps sending packet to server to tell that it is alive
     def alive(self):
@@ -87,11 +88,12 @@ class Transport():
         socket = context.socket(zmq.SUB)
         socket.connect("tcp://" + config.HOST + ":" + config.PORT_SUB)
 
-        socket.setsockopt(zmq.SUBSCRIBE, key)
+        socket.setsockopt(zmq.SUBSCRIBE, str(key))
         while True:
             try:
                 data = socket.recv()
-                logging.debug(json.loads(data), "[SUBSCRIBE]")
+                data = " ".join(data.split(" ")[1:])
+                print logging.debug(data, "[SUBSCRIBE]")
                 self.data_sub.append(json.loads(data))
             except:
                 traceback.print_exc()

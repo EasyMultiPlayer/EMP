@@ -128,7 +128,8 @@ class Transport():
         while True:
             try:
                 data = socket.recv()
-                logging.debug(json.loads(data), "[SUBSCRIBE]")
+                data = " ".join(data.split(" ")[1:])
+                print logging.debug(data, "[SUBSCRIBE]")
                 #self.data_sub.append(json.loads(data))
                 thread = threading.Thread(target=self.parse_response, args=(json.loads(data),))
                 thread.start()

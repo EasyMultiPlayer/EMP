@@ -76,7 +76,7 @@ class Transport():
             # TODO if client doesnt exist then raise error
             client = db.get_user_from_api_key(data['api_key'])
             print logging.debug(actions.get_games, '[Info]')
-            self.send({'shared_key': client.user.shared_key}, action=actions.get_games, key=client.server_shared_key)
+            self.send({'shared_key': client.user.shared_key,}, action=actions.get_games, key=client.server_shared_key)
 
         # from game server
         elif _action == actions.game_list:
@@ -138,5 +138,5 @@ class Transport():
         while True:
             data_queue = copy.deepcopy(self.data_pub)
             for session_key in data_queue:
-                socket.send(session_key + " " + data_queue[session_key])
+                socket.send(str(session_key + " " + data_queue[session_key]))
                 del (self.data_pub[session_key])

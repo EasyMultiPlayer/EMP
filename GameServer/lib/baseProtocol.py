@@ -8,10 +8,13 @@ class BaseProtocol():
         pass
     @staticmethod
     def get_games(transport, client_shared_key):
-        # transport.instance will give u all the game instances
-        # todo select some set of session keys and return it
-        # eg: ['dcasdcasd','adscasdcadsc','adscasdcads']
-        pass
+        # by default it will send all games
+        # do something with client_shared_key
+        data=[]
+        for instance in transport.instances:
+            data.append(instance.session_key)
+
+        return data
 
     @staticmethod
     def new_game(new_instance,client_shared_key):

@@ -12,4 +12,4 @@ ERROR_LOG = RES + "/error.log"
 ACCESS_LOG = RES + "/access.log"
 LOG = RES + "/log.log"
 
-ALIVE_TIMEOUT=20
+ALIVE_TIMEOUT=25
