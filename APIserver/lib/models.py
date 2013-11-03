@@ -34,11 +34,6 @@ class GameServer(Base):
     id = Column(Integer, primary_key=True)
     user_id=Column(Integer,ForeignKey(User.id))
     user = relationship(User,uselist=False)
-    game_state_params = Column(String)
-
-    def __init__(self, game_state_params="[]"):
-        self.game_state_params = game_state_params
-        #super(GameServer, self).__init__(user_json, apiKey)
 
 
 class GameClient(Base):
