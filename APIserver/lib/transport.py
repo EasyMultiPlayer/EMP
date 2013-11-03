@@ -47,12 +47,12 @@ class Transport():
     # disconnects all the clients which are not responding
     def dead_buster(self):
         while True:
-            iterator = self.connected.iterkeys()
+            iterator = self.connected.keys()[:]
             for client_shared_key in iterator:
                 if self.connected[client_shared_key] - time.time() > config.ALIVE_TIMEOUT:
                     try:
                         client=db.get_user_from_shared_key(client_shared_key)
-                        data={'shared_key':client.shared_key}
+                        data={'shared_key':client.user.shared_key}
                         self.send(data,action=actions.dead,key=client.server_shared_key)
                         del self.connected[client.shared_key]
                     except:
@@ -60,12 +60,12 @@ class Transport():
                         pass
 
     def pull_processor(self, data):
-        _action = data['actions']
+        _action = data['action']
 
         # from game_server or client: api_key
         if _action == actions.connect:
-            client = db.get_user_from_api_key(data['api_key'])
-            self.connected[client.shared_key]=time.time()
+            end_user = db.get_user_from_api_key(data['api_key'])
+            self.connected[end_user.user.shared_key]=time.time()
             print logging.debug("Connect " + data['api_key'], "[Info]")
 
         elif _action == actions.alive:
@@ -102,7 +102,7 @@ class Transport():
             self.send(data,action=actions.new_game, key=client.server_shared_key)
             data=data_filter(data,['shared_key',])
             # send to client
-            self.send(data,action=actions.game_session, key=client.shared_key)
+            self.send(data,action=actions.game_session, key=client.user.shared_key)
 
         # from client, to make things faster server_shared_key is also sent
         elif _action == actions.event:

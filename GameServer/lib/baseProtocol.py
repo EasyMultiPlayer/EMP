@@ -1,3 +1,7 @@
+import json
+from gameState import GameState
+import logging
+import config
 class BaseProtocol():
 
     def __init__(self):
@@ -5,7 +9,7 @@ class BaseProtocol():
     @staticmethod
     def get_games(transport, client_shared_key):
         # transport.instance will give u all the game instances
-        # todo @amogh select some set of session keys and return it
+        # todo select some set of session keys and return it
         # eg: ['dcasdcasd','adscasdcadsc','adscasdcads']
         pass
 
@@ -16,8 +20,10 @@ class BaseProtocol():
 
     @staticmethod
     def event(data):
-        # TODO
-        pass
+        print logging.debug(json.dumps(data))
+        # by default it will return the default game state
+        # do some processing here
+        return GameState(config.GAME_STATE_PARAMS)
 
     @staticmethod
     def dead(data):

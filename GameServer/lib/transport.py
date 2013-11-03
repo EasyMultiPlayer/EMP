@@ -63,19 +63,36 @@ class Transport():
             self.instances.append(new_instance)
 
         if _action == actions.select_game:
-            for instance in self.instances:
-                if instance.session_key == data['session_key']:
-                    instance.join_instance(data['shared_key'])
+            instance = self.get_instance(data['session_key'])
+            instance.join_instance(data['shared_key'])
 
         if _action == actions.event:
-            #todo
-            pass
+            instance = self.get_instance(data['session_key'])
+            # set game state to processed game state
+            # todo make game_state modification lock and process type
+            instance.game_state = Protocol.event(data)
+            data=instance.game_state.to_json()
+            data['session_key']=instance.session_key
+            self.send(data,action=actions.game_state,shared=True)
+
         if _action == actions.dead:
-            #todo
-            pass
+            instance = self.get_instance()
+            instance.leave_instance(data['shared_key'])
+            Protocol.dead(data)
+            if instance.status == 'removed':
+                del instance
+
         if _action == actions.disconnect:
-            #todo
-            pass
+            instance = self.get_instance()
+            instance.leave_instance(data['shared_key'])
+            Protocol.disconnect(data)
+            if instance.status == 'removed':
+                del instance
+
+    def get_instance(self,session_key):
+        for instance in self.instances:
+            if instance.session_key == session_key:
+                return instance
 
     # this keeps sending packet to server to tell that it is alive
     def alive(self):

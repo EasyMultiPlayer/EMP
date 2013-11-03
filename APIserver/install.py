@@ -1,7 +1,10 @@
 from lib import db
 
-#db.setup()
-user={'name':'alse','game_level':0,'blah':'boo'}
-game_state='x-axis,y-axis,gold,wood'
-db.create_new_game_server(user,'127.0.0.1',game_state)
+db.setup()
+#user={'fname':'alse','lname':'ambusher','game':'aoe'}
+#db.new_game_server(user)
+#db.session.commit()
+
+user={'fname':'gamer2','lname':'pro2'}
+db.new_game_client(user,"104568c23cca3bfd93220a60acde852b")
 db.session.commit()
