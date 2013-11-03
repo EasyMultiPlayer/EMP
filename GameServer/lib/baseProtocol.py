@@ -18,3 +18,11 @@ class BaseProtocol():
     def event(data):
         # TODO
         pass
+
+    @staticmethod
+    def dead(data):
+        pass
+
+    @staticmethod
+    def disconnect(data):
+        pass
