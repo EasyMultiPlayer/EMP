@@ -70,7 +70,12 @@ class Transport():
         if _action == actions.event:
             #todo
             pass
-        
+        if _action == actions.dead:
+            #todo
+            pass
+        if _action == actions.disconnect:
+            #todo
+            pass
 
     # this keeps sending packet to server to tell that it is alive
     def alive(self):

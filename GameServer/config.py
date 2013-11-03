@@ -11,4 +11,4 @@ SESSION_KEY = "TBS"
 
 
 # Users shouldnt change these
-ALIVE_PULSE=60
+ALIVE_PULSE=5

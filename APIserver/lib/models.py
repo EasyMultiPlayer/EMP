@@ -14,16 +14,16 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     user_json = Column(String)
     #api_key=Column(Integer,ForeignKey("api_keys.id"))
-    private_key = Column(String)
+    api_key = Column(String)
     shared_key = Column(String)
     # like localhost:8000
-    address = Column(String)
+    # address = Column(String)
     time = Column(TIMESTAMP)
 
-    def __init__(self, user_json, address):
+    def __init__(self, user_json):
         self.user_json = user_json
-        self.address = address
-        self.private_key, self.shared_key = keys.api_key_gen()
+
+        self.api_key, self.shared_key = keys.api_key_gen()
 
     def info(self):
         return json.loads(self.user_json)
@@ -63,15 +63,15 @@ class GameClient(Base):
 #        self.shared_key = shared_key
 
 
-class SessionKeys(Base):
-    __tablename__ = "session_keys"
-    id = Column(Integer, primary_key=True)
-    key = Column(String)
-    user_id = Column(Integer,ForeignKey(User.id))
-    user = relationship(User,uselist=False)
-
-    def __init__(self, key):
-        self.key = key
+#class SessionKeys(Base):
+#    __tablename__ = "session_keys"
+#    id = Column(Integer, primary_key=True)
+#    key = Column(String)
+#    user_id = Column(Integer,ForeignKey(User.id))
+#    user = relationship(User,uselist=False)
+#
+#    def __init__(self, key):
+#        self.key = key
 
 
 class Log(Base):
@@ -85,13 +85,13 @@ class Log(Base):
         self.value = value
 
 
-class Game(Base):
-    __tablename__ = "games"
-    id = Column(Integer, primary_key=True)
-    # info should have all the necessary stuffs about the game for clients to connect
-    data = Column(String)
-    session_id=Column(Integer,ForeignKey(SessionKeys.id))
-    session_key = relationship(SessionKeys,uselist=False)
-
-    def __init__(self, data):
-        self.data = data
+#class Game(Base):
+#    __tablename__ = "games"
+#    id = Column(Integer, primary_key=True)
+#    # info should have all the necessary stuffs about the game for clients to connect
+#    data = Column(String)
+#    session_id=Column(Integer,ForeignKey(SessionKeys.id))
+#    session_key = relationship(SessionKeys,uselist=False)
+#
+#    def __init__(self, data):
+#        self.data = data

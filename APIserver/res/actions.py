@@ -9,6 +9,8 @@ new_game_data="new_game_data"
 subscribe_game_state="subscribe_game_state"
 event="event"
 game_state="game_state"
+disconnect="disconnect"
+dead="dead"
 
 
 alive="alive"

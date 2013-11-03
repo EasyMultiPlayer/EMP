@@ -8,16 +8,18 @@ import json
 from res import actions
 import db
 from basic import data_filter
-
+from keys import session_key_gen
 
 class Transport():
     logs = []
     data_pub = {} # this should have 'session_key':'<data_to_be_pushed>' dictionary
+    connected = {} # 'shared_key':time.time()
 
     def __init__(self):
         self.threads = [
             threading.Thread(target=self.publish),
-            threading.Thread(target=self.batch_logger)
+            threading.Thread(target=self.batch_logger),
+            threading.Thread(target=self.dead_buster)
         ]
 
         for port in config.PORT_PULL:
@@ -42,14 +44,34 @@ class Transport():
                 self.logs.remove(log)
             time.sleep(5)
 
+    # disconnects all the clients which are not responding
+    def dead_buster(self):
+        while True:
+            iterator = self.connected.iterkeys()
+            for client_shared_key in iterator:
+                if self.connected[client_shared_key] - time.time() > config.ALIVE_TIMEOUT:
+                    try:
+                        client=db.get_user_from_shared_key(client_shared_key)
+                        data={'shared_key':client.shared_key}
+                        self.send(data,action=actions.dead,key=client.server_shared_key)
+                        del self.connected[client.shared_key]
+                    except:
+                        # todo take care of servers not responding also
+                        pass
+
     def pull_processor(self, data):
         _action = data['actions']
 
-        # from game_server or client
+        # from game_server or client: api_key
         if _action == actions.connect:
+            client = db.get_user_from_api_key(data['api_key'])
+            self.connected[client.shared_key]=time.time()
             print logging.debug("Connect " + data['api_key'], "[Info]")
 
-        # from client
+        elif _action == actions.alive:
+            self.connected[data['shared_key']]=float(data['time'])
+
+        # from client api_key,
         elif _action == actions.get_games:
             # TODO if client doesnt exist then raise error
             client = db.get_user_from_api_key(data['api_key'])
@@ -66,15 +88,33 @@ class Transport():
             # publish to that key
             self.send(data, action=actions.game_list, key=key)
 
-        # from client select game
+        # from client select game shared_key
         elif _action == actions.select_game:
-            # TODO
-            pass
+            client = db.get_user_from_api_key(data['api_key'])
+            self.send(data,action=actions.select_game, key=client.server_shared_key)
 
-        # from client new game
+
+        # from client new game: shared_key
         elif _action == actions.new_game:
-            #TODO
-            pass
+            client = db.get_user_from_shared_key(data['shared_key'])
+            data['session_key'] = session_key_gen()
+            # send server
+            self.send(data,action=actions.new_game, key=client.server_shared_key)
+            data=data_filter(data,['shared_key',])
+            # send to client
+            self.send(data,action=actions.game_session, key=client.shared_key)
+
+        # from client, to make things faster server_shared_key is also sent
+        elif _action == actions.event:
+            key=data['server_shared_key']
+            data=data_filter(data,['server_shared_key'])
+            self.send(data,action=actions.event,key=key)
+
+        # from server. forward this to all clients
+        elif _action == actions.game_state:
+            session_key=data['session_key']
+            data=data_filter(data,['session_key'])
+            self.send(data,action=actions.game_state,key=session_key)
 
     def pull(self, port):
         context = zmq.Context()
