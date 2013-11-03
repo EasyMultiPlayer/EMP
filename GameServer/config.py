@@ -3,8 +3,8 @@ PORT_SUB = "6001"
 PORT_PUSH = ["6002", "6003", "6004", "6005", "6006"]
 
 # To be set TBS
-API_KEY = "a7f56ed4d6cc33d4ea6f551a4b3d44e7072260d6"
-SHARED_KEY="104568c23cca3bfd93220a60acde852b"
+API_KEY = "58ff75f4f4a0db1554c54868187586b7a8728d2a"
+SHARED_KEY="b8b15ab61f3fe23b968bf72762ba3d77"
 
 # this is set later in the game
 SESSION_KEY = "TBS"

@@ -12,10 +12,10 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    user_json = Column(String)
+    user_json = Column(String(1000))
     #api_key=Column(Integer,ForeignKey("api_keys.id"))
-    api_key = Column(String)
-    shared_key = Column(String)
+    api_key = Column(String(200))
+    shared_key = Column(String(200))
     # like localhost:8000
     # address = Column(String)
     time = Column(TIMESTAMP)
@@ -39,7 +39,7 @@ class GameServer(Base):
 class GameClient(Base):
     __tablename__ = "game_client"
     id = Column(Integer, primary_key=True)
-    server_shared_key = Column(String)
+    server_shared_key = Column(String(200))
     user_id=Column(Integer,ForeignKey(User.id))
     user = relationship(User,uselist=False)
 
@@ -69,15 +69,15 @@ class GameClient(Base):
 #        self.key = key
 
 
-class Log(Base):
-    __tablename__ = "logs"
-    id = Column(Integer, primary_key=True)
-    key = Column(String)
-    value = Column(String)
-
-    def __init__(self, value, key="Debug"):
-        self.key = key
-        self.value = value
+#class Log(Base):
+#    __tablename__ = "logs"
+#    id = Column(Integer, primary_key=True)
+#    key = Column(String)
+#    value = Column(String)
+#
+#    def __init__(self, value, key="Debug"):
+#        self.key = key
+#        self.value = value
 
 
 #class Game(Base):
