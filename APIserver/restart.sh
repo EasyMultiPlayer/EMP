@@ -9,3 +9,9 @@ for port in $(seq 6001 6004)
 do
 killer
 done
+
+for i in $(ps -e|grep python)
+do
+i=`echo $i|cut -d ' ' -f 1`
+kill -9 $i >/dev/null
+done

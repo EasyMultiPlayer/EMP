@@ -11,7 +11,11 @@ SESSION_KEY = "TBS"
 
 
 # Users shouldnt change these
-ALIVE_PULSE=10
+ALIVE_PULSE=60
 
 #TODO
-GAME_STATE_PARAMS={}
+GAME_STATE_PARAMS={
+    "gold" : 1000,
+    "height" : 2000,
+    "x" :20
+}

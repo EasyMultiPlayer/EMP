@@ -76,14 +76,14 @@ class Transport():
             self.send(data,action=actions.game_state,shared=True)
 
         if _action == actions.dead:
-            instance = self.get_instance()
+            instance = self.get_instance(data['session_key'])
             instance.leave_instance(data['shared_key'])
             Protocol.dead(data)
             if instance.status == 'removed':
                 del instance
 
         if _action == actions.disconnect:
-            instance = self.get_instance()
+            instance = self.get_instance(data['session_key'])
             instance.leave_instance(data['shared_key'])
             Protocol.disconnect(data)
             if instance.status == 'removed':
@@ -91,13 +91,15 @@ class Transport():
 
     def get_instance(self,session_key):
         for instance in self.instances:
-            if instance.session_key == session_key:
+
+            if str(instance.session_key) == str(session_key):
                 return instance
 
     # this keeps sending packet to server to tell that it is alive
     def alive(self):
         while True:
-            self.send(action=actions.alive, shared=True)
+            data={}
+            self.send(data,action=actions.alive, shared=True)
             time.sleep(config.ALIVE_PULSE)
 
     def push_server(self):

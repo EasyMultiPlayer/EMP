@@ -14,11 +14,13 @@ def init(transport):
 
     if key == "-1":
         # want to create a new game
-        transport.send(action=actions.new_game, api=True)
+        data={}
+        transport.send(data,action=actions.new_game, shared=True)
 
-    elif key in data['games'].keys():
+    elif key in data['games']:
+        config.SESSION_KEY = key
         # connect to a game which already exists
-        transport.send(query={'game':key ,},action=actions.select_game,api=True)
+        transport.send(query={'game':key ,},action=actions.select_game,shared=True, session=True)
 
     # get the session key of the game instance
     session_key=transport.get_response(action=actions.game_session)
@@ -26,3 +28,7 @@ def init(transport):
 
     # subscribe to the session key of the game
     transport.subscribe(session_key['session_key'])
+
+    # todo remove this
+    data={'x':10,'y':20,'gold':300}
+    transport.send(data,action=actions.event,shared=True,session=True,server_shared=True)

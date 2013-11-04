@@ -49,15 +49,17 @@ class Transport():
         while True:
             iterator = self.connected.keys()[:]
             for client_shared_key in iterator:
-                if self.connected[client_shared_key] - time.time() > config.ALIVE_TIMEOUT:
+                if  time.time() - self.connected[client_shared_key] > float(config.ALIVE_TIMEOUT):
                     try:
                         client=db.get_user_from_shared_key(client_shared_key)
+                        print logging.debug("disconnect "+client.user.shared_key,"[INFO]")
                         data={'shared_key':client.user.shared_key}
                         self.send(data,action=actions.dead,key=client.server_shared_key)
-                        del self.connected[client.shared_key]
+                        del self.connected[client.user.shared_key]
                     except:
                         # todo take care of servers not responding also
                         pass
+            time.sleep(5)
 
     def pull_processor(self, data):
         _action = data['action']
@@ -90,7 +92,7 @@ class Transport():
 
         # from client select game shared_key
         elif _action == actions.select_game:
-            client = db.get_user_from_api_key(data['api_key'])
+            client = db.get_user_from_shared_key(data['shared_key'])
             self.send(data,action=actions.select_game, key=client.server_shared_key)
 
 
@@ -125,8 +127,10 @@ class Transport():
 
         while True:
             string = socket.recv()
-            #print logging.debug(string, '[PULL:' + port + ']')
-            thread = threading.Thread(target=self.pull_processor, args=(json.loads(string),))
+            data=json.loads(string)
+            if data['action'] != actions.alive:
+                print logging.debug(string, '[PULL:' + port + ']')
+            thread = threading.Thread(target=self.pull_processor, args=(data,))
             thread.start()
 
     # TODO make this multi threaded
@@ -136,7 +140,10 @@ class Transport():
 
         socket.bind("tcp://*:" + config.PORT_PUB)
         while True:
-            data_queue = copy.deepcopy(self.data_pub)
+            try:
+                data_queue = copy.deepcopy(self.data_pub)
+            except RuntimeError:
+                pass
             for session_key in data_queue:
                 socket.send(str(session_key + " " + data_queue[session_key]))
                 del (self.data_pub[session_key])
