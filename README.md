@@ -1,3 +1,4 @@
 Easy Multi Player
 =================
-UNDER DEVELOPMENT
+
+EOL
